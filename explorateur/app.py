@@ -13,12 +13,22 @@ from __future__ import annotations
 
 import json
 import pathlib
+import sys
 from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import streamlit as st
+
+
+# **La racine du depot entre dans le chemin d'import, et ce n'est pas superflu.** Streamlit
+# ajoute le dossier du **script** a `sys.path`, pas la racine : sur l'hebergeur, ou le script
+# est `explorateur/app.py`, le paquet `explorateur` n'est donc pas importable. Mesure du
+# 15 septembre 2026, premier deploiement : « ModuleNotFoundError » sur la ligne d'import
+# ci-dessous. En local cela passait, la racine etant le repertoire courant -- exactement le
+# genre de difference qui ne se voit qu'une fois deploye.
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 
 from explorateur import donnees, textes
 from explorateur.auth import exiger_une_connexion
@@ -346,7 +356,10 @@ def _mise_en_forme(affiche: pd.DataFrame) -> Any:
     qui se lit comme une panne. La table affichée porte donc du **texte**, formaté ici.
 
     Mais `background_gradient` ne sait pas colorer du texte. Il prend alors `gmap`, une carte
-    **numérique** parallèle : la couleur vient des nombres, l'affichage vient des chaînes.
+    **numérique** parallèle : la couleur vient des nombres, l'affichage vient des chaînes. Et
+    un `gmap` en tableau exige `axis=None` -- avec `axis=0` pandas travaille colonne par
+    colonne et refuse un tableau. Cela ne change rien à la couleur ici, les bornes étant fixées
+    à 0 et 100 : l'échelle est la même pour toutes les colonnes de toute façon.
 
     Enfin, `background_gradient` peint les valeurs absentes en noir -- plus voyantes que le
     meilleur score de la colonne, la couleur criant exactement là où il n'y a rien. Les cases

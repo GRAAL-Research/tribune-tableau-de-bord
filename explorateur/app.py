@@ -16,6 +16,7 @@ import pathlib
 from typing import Any
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import streamlit as st
 
@@ -24,6 +25,12 @@ from explorateur.auth import exiger_une_connexion
 
 
 st.set_page_config(page_title="Tribune", page_icon="TR", layout="wide")
+
+# Ce qu'affiche une case sans valeur, partout, plutot que « None » ou un noir criard.
+SANS_VALEUR = "—"
+
+# Le fond d'une case sans valeur : celui de la page, pour qu'elle se taise.
+FOND_VIDE = "#f4f6fa"
 
 NOTE_PDF = donnees.RACINE / "rapport" / "litterature" / "contexte-modeles-et-taches.pdf"
 FICHES = pathlib.Path(__file__).resolve().parent / "fiches-taches.json"
@@ -139,8 +146,14 @@ def _carte(large: pd.DataFrame, table: pd.DataFrame) -> None:
     du minimum au maximum observés : sans cela, la couleur dirait le rang dans la récolte
     plutôt que la performance.
     """
+    # **Une case sans valeur ne doit pas se peindre comme un zero.** `imshow` laisse les valeurs
+    # absentes en blanc, or le blanc est aussi le bas de l'echelle : la ligne d'une baseline qui
+    # ne couvre que deux taches se lisait comme un modele nul partout ailleurs.
+    palette = plt.get_cmap("Blues").copy()
+    palette.set_bad("#e9ecf2")
+    valeurs = np.ma.masked_invalid(large.to_numpy(dtype=float))
     figure, axes = plt.subplots(figsize=(1.1 * len(large.columns) + 3, 0.30 * len(large) + 1.8))
-    image = axes.imshow(large.to_numpy(dtype=float), aspect="auto", cmap="Blues", vmin=0, vmax=100)
+    image = axes.imshow(valeurs, aspect="auto", cmap=palette, vmin=0, vmax=100)
     axes.set_yticks(range(len(large)), [str(i) for i in large.index], fontsize=8)
     # **Le repere de chaque tache est marque sous son en-tete.** Une case a 52 % ne se lit pas
     # sans savoir que repondre toujours la classe majoritaire en donne 52 aussi.
@@ -324,24 +337,39 @@ def _page_classement(table: pd.DataFrame, recolte: str) -> None:
 
 
 def _mise_en_forme(affiche: pd.DataFrame) -> Any:
-    """Le dégradé par colonne, et les baselines en gras.
+    """Le dégradé par colonne, les baselines en gras, et pas un « None » à l'écran.
 
-    **Le dégradé se calcule colonne par colonne.** Une échelle unique sur tout le tableau
-    laisserait `2b`, où personne ne dépasse 40, uniformément pâle : la couleur dirait alors la
-    difficulté de la tâche plutôt que l'écart entre les modèles, qui est ce qu'on regarde.
+    **Trois contraintes qui se contredisent, et la façon de les tenir ensemble.**
 
-    **Les baselines sont en gras parce qu'elles ne sont pas des modèles.** Une ligne
-    « hasard » au milieu du classement se lit comme un système évalué tant que rien ne la
-    distingue ; en gras, elle se repère comme la référence qu'elle est.
+    `st.dataframe` rend un tableau numérique par Arrow, qui écrit son propre marqueur de valeur
+    absente : le `na_rep` d'un Styler est ignoré, et les cases vides affichaient « None », ce
+    qui se lit comme une panne. La table affichée porte donc du **texte**, formaté ici.
+
+    Mais `background_gradient` ne sait pas colorer du texte. Il prend alors `gmap`, une carte
+    **numérique** parallèle : la couleur vient des nombres, l'affichage vient des chaînes.
+
+    Enfin, `background_gradient` peint les valeurs absentes en noir -- plus voyantes que le
+    meilleur score de la colonne, la couleur criant exactement là où il n'y a rien. Les cases
+    sans valeur reprennent le fond de la page, par une passe explicite.
     """
-    style = affiche.style.format("{:.1f}", na_rep="—").background_gradient(
-        cmap="Blues", axis=0, vmin=0, vmax=100
-    )
-    return style.apply(
-        lambda ligne: [
-            "font-weight: 700" if donnees.est_une_baseline(ligne.name) else "" for _ in ligne
-        ],
-        axis=1,
+    nombres = affiche.astype(float)
+    texte = nombres.map(lambda v: SANS_VALEUR if pd.isna(v) else f"{v:.1f}")
+    vides = nombres.isna()
+    return (
+        texte.style
+        .background_gradient(cmap="Blues", axis=0, gmap=nombres, vmin=0, vmax=100)
+        .apply(
+            lambda _: vides.map(
+                lambda est_vide: f"background-color: {FOND_VIDE}" if est_vide else ""
+            ),
+            axis=None,
+        )
+        .apply(
+            lambda ligne: [
+                "font-weight: 700" if donnees.est_une_baseline(ligne.name) else "" for _ in ligne
+            ],
+            axis=1,
+        )
     )
 
 

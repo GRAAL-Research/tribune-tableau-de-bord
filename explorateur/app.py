@@ -356,7 +356,10 @@ def _mise_en_forme(affiche: pd.DataFrame) -> Any:
     qui se lit comme une panne. La table affichée porte donc du **texte**, formaté ici.
 
     Mais `background_gradient` ne sait pas colorer du texte. Il prend alors `gmap`, une carte
-    **numérique** parallèle : la couleur vient des nombres, l'affichage vient des chaînes. Et
+    **numérique** parallèle : la couleur vient des nombres, l'affichage vient des chaînes. Et un
+    `gmap` en tableau exige `axis=None` -- avec `axis=0` pandas travaille colonne par colonne et
+    refuse un tableau. Cela ne change rien au rendu : les bornes étant fixées à 0 et 100,
+    l'échelle est la même pour toutes les colonnes de toute façon. Et
     un `gmap` en tableau exige `axis=None` -- avec `axis=0` pandas travaille colonne par
     colonne et refuse un tableau. Cela ne change rien à la couleur ici, les bornes étant fixées
     à 0 et 100 : l'échelle est la même pour toutes les colonnes de toute façon.
@@ -370,7 +373,7 @@ def _mise_en_forme(affiche: pd.DataFrame) -> Any:
     vides = nombres.isna()
     return (
         texte.style
-        .background_gradient(cmap="Blues", axis=0, gmap=nombres, vmin=0, vmax=100)
+        .background_gradient(cmap="Blues", axis=None, gmap=nombres, vmin=0, vmax=100)
         .apply(
             lambda _: vides.map(
                 lambda est_vide: f"background-color: {FOND_VIDE}" if est_vide else ""

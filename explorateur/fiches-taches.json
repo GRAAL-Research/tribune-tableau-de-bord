@@ -1,0 +1,337 @@
+{
+  "0a-long": {
+    "CORPUS": "EUR-Lex-Sum, French split, sources above the threshold.",
+    "EVALUATION": "ROUGE-1, ROUGE-2, ROUGE-L and their mean as the primary metric, with BERTScore, MeaningBERT and the compression ratio alongside. Read together with the truncation ratio: 55,2 % of the source removed for the 16 384 group over 352 items, 65,0 % for the 8 192 group over 430.",
+    "EXPECTED TRUTH": "The human reference summary of the whole document.",
+    "GIVEN TO THE MODEL": "[19 400 words. At a 16 384-token window, 55 % of the source is removed before the model sees it.]",
+    "ITEM": "A document longer than the served window, deliberately. Only 39 % of the pooled 0a items fit 16 384 tokens, which is why the two variants are separate tasks.",
+    "NOTE": "Scored against the full reference although the model read half the source: the truncation ratio is published beside the score.",
+    "RESERVATION": "A score here is never comparable with 0a-short, and two models served at different windows are not comparable with each other.",
+    "titre": "Summarise a debate whose source exceeds the window"
+  },
+  "0a-short": {
+    "CORPUS": "EUR-Lex-Sum, French split, sources under the short-source threshold.",
+    "EVALUATION": "The mean of ROUGE-1, ROUGE-2 and ROUGE-L as the primary metric, with the three of them, BERTScore, MeaningBERT and the compression ratio published alongside.",
+    "EXPECTED TRUTH": "This Directive coordinates national procurement procedures above defined thresholds, and sets the award criteria contracting authorities must apply.",
+    "GIVEN TO THE MODEL": "Directive 2014/24/EU on public procurement. Article 1. This Directive establishes rules on the procedures for procurement by contracting authorities with respect to public contracts... [2 100 words]",
+    "GROUND TRUTH": "Human reference summaries. Without a reference, ROUGE publishes a pattern rather than a score: the oracle reaches 100 % and a plain copy of the source 31,3 %.",
+    "ITEM": "A legislative document that fits the served window, and the instruction to summarise it.",
+    "NOTE": "Human reference summary, 68 words. ROUGE is computed against it.",
+    "titre": "Summarise a debate whose source fits the window"
+  },
+  "0b": {
+    "CORPUS": "Journal des débats, Quebec National Assembly.",
+    "EVALUATION": "MeaningBERT as the primary metric, with embedding similarity and lexical overlap alongside.",
+    "EXPECTED TRUTH": "de transport collectif",
+    "GIVEN TO THE MODEL": "M. le Président, le gouvernement a déposé son plan [......] sans consulter les municipalités concernées.",
+    "ITEM": "A turn with one passage replaced by a marker, and the instruction to restore it.",
+    "titre": "Fill a gapped passage of a speaking turn"
+  },
+  "0c": {
+    "CORPUS": "Journal des débats. Distractors are drawn from other turns of the same sitting, so period cues cannot substitute for reading.",
+    "EVALUATION": "Accuracy. Recall@2 is published as null with its reason: the output contract asks for an integer, so recall cannot differ from accuracy.",
+    "EXPECTED TRUTH": "A. Je remercie mon collègue de sa question sur l'économie. B. M. le Président, quarante-deux municipalités ont été rencontrées depuis mars. ← truth C. La séance est suspendue pour dix minutes.",
+    "GIVEN TO THE MODEL": "Turn: « M. le Président, ma question s'adresse au ministre des Transports. Combien de municipalités ont été consultées ? »",
+    "ITEM": "One turn, then several candidate continuations.",
+    "titre": "Find the turn that follows a given one"
+  },
+  "0d": {
+    "CORPUS": "Journal des débats, consecutive turns of a single exchange.",
+    "EVALUATION": "Kendall tau as the primary metric, with exact order accuracy alongside.",
+    "EXPECTED TRUTH": "3, 1, 2",
+    "GIVEN TO THE MODEL": "1 Le ministre peut-il déposer les études ? 2 Je le remercie de sa question. 3 M. le Président, ma question s'adresse au ministre.",
+    "ITEM": "The turns presented shuffled, to be put back in order.",
+    "NOTE": "Kendall tau is computed on this permutation.",
+    "titre": "Reorder the turns of one exchange"
+  },
+  "0e": {
+    "CORPUS": "Journal des débats, several turns concatenated without their speaker labels.",
+    "EVALUATION": "Boundary F1 as the primary metric, with boundary precision and recall alongside, all three on a two-character tolerance.",
+    "EXPECTED TRUTH": "Boundaries at character 42 and character 96 .",
+    "GIVEN TO THE MODEL": "nous devons agir maintenant pour les régions|Je remercie ma collègue de son intervention et je réponds|Le député de Rousseau a la parole",
+    "ITEM": "A block of running text whose boundaries are returned as character offsets. The ritual opening formula is removed from the text, since it begins 97 % of turns and would otherwise mark every boundary.",
+    "titre": "Locate the boundaries between turns"
+  },
+  "0f": {
+    "CORPUS": "Journal des débats. The label is the order of business declared by the record itself.",
+    "EVALUATION": "Accuracy and macro-F1. Off-label answers count as wrong here, where level 1 excludes them: two conventions coexist in one campaign, and off-label counts run from 1 to 180 items out of 500 depending on the model.",
+    "EXPECTED TRUTH": "Dépôt de documents",
+    "GIVEN TO THE MODEL": "« M. le Président, je dépose le rapport annuel du Vérificateur général pour l'exercice 2024-2025. »",
+    "ITEM": "One turn and the list of admissible labels. Labels with fewer than 20 supporting items are dropped.",
+    "NOTE": "Label declared by the record itself, among the orders of business with at least 20 supporting items.",
+    "titre": "Classify a turn by order of business"
+  },
+  "0gi-en": {
+    "CORPUS": "Aligned Canadian federal Hansard, French and English.",
+    "EVALUATION": "Token-level language F1. The four rungs share one prompt, word for word: what changes between them is how the alternation is built, never what the model is asked.",
+    "EXPECTED TRUTH": "fr fr fr fr en en en",
+    "GIVEN TO THE MODEL": "Le comité a recommandé for this provision",
+    "ITEM": "A passage assembled from the aligned Hansard, where every fragment comes from a known side of the alignment. The switch falls at a comma taken at the same ordinal on both sides, so the two halves answer each other; a sentence offering no corresponding ordinal is discarded rather than cut at an arbitrary rank.",
+    "MOTIF": "The mirror of 0gi-fr. Both are served because a gap between them measures a language bias rather than an alternation skill, and one of the two alone could not show it.",
+    "NOTE": "The mirror: French opens, English always closes. A gap between the two rungs is a language bias, not an alternation skill. One label per token; the granularity is always the token, a sentence carrying both languages from the first rung onward.",
+    "RESERVATION": "The alternation is constructed, assembled from a translation sentence by sentence. It is not spontaneous code-switching, and a high score here does not amount to detecting the real alternation of a bilingual speaker. What the corresponding-ordinal cut buys is a syntactically plausible passage instead of a broken splice.",
+    "titre": "Label each token's language; English always closes (mirror)"
+  },
+  "0gi-fr": {
+    "CORPUS": "Aligned Canadian federal Hansard, French and English.",
+    "EVALUATION": "Token-level language F1. The four rungs share one prompt, word for word: what changes between them is how the alternation is built, never what the model is asked.",
+    "EXPECTED TRUTH": "en en en en en fr fr fr",
+    "GIVEN TO THE MODEL": "has recommended a sunset clause pour cette disposition",
+    "ITEM": "A passage assembled from the aligned Hansard, where every fragment comes from a known side of the alignment. The switch falls at a comma taken at the same ordinal on both sides, so the two halves answer each other; a sentence offering no corresponding ordinal is discarded rather than cut at an arbitrary rank.",
+    "MOTIF": "Position is fixed: English opens each sentence, French closes it, so position is exploitable without reading the language. No code baseline demonstrates this: a constant all-French answer scores only 35.9 % because macro-F1 punishes the empty class, and a positional heuristic would need the sentence boundaries the model does not have either. What position buys is read as the gap between this rung and 0gii at campaign time.",
+    "NOTE": "English opens, French always closes, so position alone is exploitable. The gap between this rung and 0gii is what says whether a model took the shortcut. One label per token; the granularity is always the token, a sentence carrying both languages from the first rung onward.",
+    "RESERVATION": "The alternation is constructed, assembled from a translation sentence by sentence. It is not spontaneous code-switching, and a high score here does not amount to detecting the real alternation of a bilingual speaker. What the corresponding-ordinal cut buys is a syntactically plausible passage instead of a broken splice.",
+    "titre": "Label each token's language; French always closes the sentence"
+  },
+  "0gii": {
+    "CORPUS": "Aligned Canadian federal Hansard, French and English.",
+    "EVALUATION": "Token-level language F1. The four rungs share one prompt, word for word: what changes between them is how the alternation is built, never what the model is asked.",
+    "EXPECTED TRUTH": "en en en en en fr fr fr",
+    "GIVEN TO THE MODEL": "has recommended a sunset clause pour cette disposition",
+    "ITEM": "A passage assembled from the aligned Hansard, where every fragment comes from a known side of the alignment. The switch falls at a comma taken at the same ordinal on both sides, so the two halves answer each other; a sentence offering no corresponding ordinal is discarded rather than cut at an arbitrary rank.",
+    "MOTIF": "Orientation is drawn for each sentence, so a constant answer earns nothing. This rung is the corrected equivalent of the retired 0g task.",
+    "NOTE": "The opening language is drawn for each sentence, so no constant answer survives. This rung is the corrected equivalent of the retired 0g task. One label per token; the granularity is always the token, a sentence carrying both languages from the first rung onward.",
+    "RESERVATION": "The alternation is constructed, assembled from a translation sentence by sentence. It is not spontaneous code-switching, and a high score here does not amount to detecting the real alternation of a bilingual speaker. What the corresponding-ordinal cut buys is a syntactically plausible passage instead of a broken splice.",
+    "titre": "Label each token's language; the opening language is drawn"
+  },
+  "0giii": {
+    "CORPUS": "Aligned Canadian federal Hansard, French and English.",
+    "EVALUATION": "Token-level language F1. The four rungs share one prompt, word for word: what changes between them is how the alternation is built, never what the model is asked.",
+    "EXPECTED TRUTH": "fr fr fr fr en en en fr fr fr",
+    "GIVEN TO THE MODEL": "Le comité a recommandé has recommended a pour cette disposition",
+    "ITEM": "A passage assembled from the aligned Hansard, where every fragment comes from a known side of the alignment. The switch falls at a comma taken at the same ordinal on both sides, so the two halves answer each other; a sentence offering no corresponding ordinal is discarded rather than cut at an arbitrary rank.",
+    "MOTIF": "A base language that comes back, with the other inserted between its returns. The hardest rung: finding one boundary is no longer enough, the re-entry has to be tracked.",
+    "NOTE": "The base language comes back after the insertion: the re-entry has to be tracked, not just one boundary found. One label per token; the granularity is always the token, a sentence carrying both languages from the first rung onward.",
+    "RESERVATION": "The alternation is constructed, assembled from a translation sentence by sentence. It is not spontaneous code-switching, and a high score here does not amount to detecting the real alternation of a bilingual speaker. What the corresponding-ordinal cut buys is a syntactically plausible passage instead of a broken splice.",
+    "titre": "Label each token's language across several insertions"
+  },
+  "0h": {
+    "CORPUS": "Journal des débats. Labels come from CamemBERT-NER, with a pattern fallback.",
+    "EVALUATION": "Entity F1 as the primary metric, with entity precision and recall alongside. Precision is the defensible half: the label set is incomplete by construction, so recall is bounded by what the labeller found.",
+    "EXPECTED TRUTH": "PER: M. Legault     LOC: Rosemont        LAW: projet de loi 96    DATE: 3 juin",
+    "GIVEN TO THE MODEL": "« M. LegaultPER a répondu au député de RosemontLOC que le projet de loi 96LAW serait appelé le 3 juinDATE . »",
+    "ITEM": "One turn, and the instruction to return its entities.",
+    "titre": "Extract the named entities of a turn"
+  },
+  "0i": {
+    "CORPUS": "Journal des débats. Questions are generated by pattern: the pattern locates a date, a number or a name in the turn, and the expected answer is what it captured. A pattern occurring twice in the turn is discarded, so a question never has two right answers.",
+    "EVALUATION": "Span F1 and exact match.",
+    "EXPECTED TRUTH": "3 juin 2024",
+    "GIVEN TO THE MODEL": "Question: À quelle date le ministre a-t-il déposé le projet ? Turn: « M. le Président, j'ai déposé ce projet le 3 juin 2024 et les consultations ont suivi en septembre. »",
+    "ITEM": "A turn and a factual question whose answer is a span of that turn.",
+    "NOTE": "Question generated by pattern; the pattern must occur once in the turn, so the question never has two right answers.",
+    "titre": "Answer a question by extracting a span"
+  },
+  "0j": {
+    "CORPUS": "Versioned list of 51 acronyms with a stable expansion.",
+    "EVALUATION": "Accuracy, abstention rate and macro-F1. WHY THE PAIR WITH 1C 1c poses the same acronym on the same excerpt and asks the model to write the designation instead of picking it. The item universes are identical by construction, so the gap between the two scores measures wording and nothing else. Recognition sits at level 0, production at level 1.",
+    "EXPECTED TRUTH": "A. Conseil permanent de l'éducation B. Centre de la petite enfance ← truth C. Comité de planification économique F. je ne sais pas",
+    "GIVEN TO THE MODEL": "« Le CPE de mon comté attend une réponse depuis huit mois. »",
+    "ITEM": "The acronym in its sentence, five expansions of which one is official, plus a « je ne sais pas » option. The distractors are drawn from the same family as the answer, parties against parties and public bodies against public bodies, since a draw across the whole list would be settled by lexical plausibility alone.",
+    "NOTE": "Recognition, not production: 1c poses the same acronym without options. The distractors come from the same family as the answer, so telling them apart means telling neighbouring bodies apart.",
+    "titre": "Recognise the expansion of an acronym used in session"
+  },
+  "0k": {
+    "CORPUS": "CLEAR, redistributed in MultiSim, for the SARI reference.",
+    "EVALUATION": "MeaningBERT as the primary metric: it measures what the simplification preserved, which is the question the task asks. SARI and the readability gain are published alongside. Over 20 models: MeaningBERT 71,7 to 91,6, SARI 27,2 to 39,4, readability gain -0,5 to 10,4. WHY THE THREE ARE READ TOGETHER The readability gain alone is gameable, and not in theory: deleting half the text raises it. Meaning preservation closes that door, and the scorer publishes a caveat on the gain whenever MeaningBERT is missing.",
+    "EXPECTED TRUTH": "Malgré ce qui précède, l'autorité peut permettre une exception aux conditions qu'elle fixe.",
+    "GIVEN TO THE MODEL": "« Nonobstant les dispositions qui précèdent, l'autorité compétente peut, aux conditions qu'elle détermine, autoriser une dérogation. »",
+    "ITEM": "A passage and the instruction to simplify it.",
+    "titre": "Simplify a passage"
+  },
+  "0l": {
+    "CORPUS": "Journal des débats, with Helsinki-NLP opus-mt held constant in both directions.",
+    "EVALUATION": "MeaningBERT as the primary metric, on the pair original and returned text: it says whether the meaning held. Quebecism preservation and embedding distance are published alongside. The preservation is purely lexical: for each item carrying at least one term of the lexicon, the share of those terms that survive. Multi-word terms such as banc de neige are matched as a contiguous token sequence, so the words appearing apart do not count, and the comparison folds diacritics.",
+    "EXPECTED TRUTH": "Returned: « There was blowing snow all weekend » → « Il y a eu de la neige soufflée tout le week-end » poudrerie lost, fin de semaine lost: preservation 0/2",
+    "GIVEN TO THE MODEL": "Call 1: « Il y a eu de la poudrerie toute la fin de semaine sur la 20. » → English Call 2: the English output alone → French",
+    "ITEM": "A passage carrying Quebecisms, translated to English then back to French in two calls: the second receives only the English output of the first, so the French original, which is the scoring reference, never sits in the prompt.",
+    "RESERVATION": "An item carrying no Quebecism is excluded rather than counted as perfectly preserved, since most turns carry none and the average would drift to 1 whatever the translation did. The two-turn protocol is also unequal across strata: 30 items received a single turn for the five models capped at 8 192.",
+    "titre": "Survive a translation round trip"
+  },
+  "0m": {
+    "CORPUS": "Journal des débats, with a mechanically verifiable constraint attached to each item.",
+    "EVALUATION": "Share of constraints met, on two deliberate denominators. Item accuracy covers every item, because an empty answer that mechanically satisfies « write no digits » is a failure and not a success. Constraint accuracy covers only items carrying content, measured by how much of the answer is anchored in the source passage, with a floor of five words so a single borrowed word does not score a perfect anchor with no content. Drift rate and vacuous compliance rate are published alongside.",
+    "EXPECTED TRUTH": "Quarante-deux municipalités ont été rencontrées depuis le mois de mars.",
+    "GIVEN TO THE MODEL": "Passage: « ...quarante-deux municipalités ont été rencontrées depuis mars 2024... » Constraint: answer in at most 40 words and write no digits",
+    "ITEM": "A passage and a constraint on the shape of the answer rather than on its content. The generation ceiling is deliberately generous against the tightest constraint of forty words, since a ceiling fitted to the constraint would let truncation enforce the length instead of the model.",
+    "NOTE": "Both constraints met. An empty answer would satisfy « no digits » mechanically, so it is a failure and not a success.",
+    "titre": "Follow a verifiable formatting instruction"
+  },
+  "0n": {
+    "CORPUS": "Journal des débats, padded to a grid of token tiers from a single slice of corpus and period.",
+    "EVALUATION": "The span F1 obtained at the longest tier the model still reaches, with exact match and the effective window in tokens alongside. The tier alone would say where it stops without saying how well it did there, and the F1 alone would average a good short-context score with a collapsed long-context one. The full curve, span F1 per tier, is published beside it.",
+    "EXPECTED TRUTH": "Span F1 per tier: 0,91    0,88   0,34    0,00",
+    "GIVEN TO THE MODEL": "Same question as 0i, the needle buried at four lengths:",
+    "ITEM": "A factual question whose answer is a literal span, the needle, buried in real verbatim padded to 1 000, 4 000, 16 000 and 64 000 tokens. Same task as 0i, repeated at increasing length: what is measured is not comprehension, already measured at short context, but the length at which it stops. FOUR VALIDITY RULES Padding comes from the same corpus and period, so period cues cannot answer for reading. Any turn where the question pattern appears is excluded from the padding, so drowning the needle does not manufacture rivals. An item the inference bridge discards for exceeding the window stays in the denominator, because here that discard is the measurement. And a needle is served at every tier or at none, so tiers are always scored on the same sample.",
+    "NOTE": "1 000 tokens | 4 000 | 16 000 | 64 000. Padding from the same corpus and period; any turn carrying the question pattern is excluded from the padding. Reported: span F1 0,34 at the longest tier reached, 16 000. The 64 000 tier exceeds every window in the fleet.",
+    "titre": "Find the context length at which retrieval stops working"
+  },
+  "1a": {
+    "CORPUS": "Journal des débats for the exchange. Sixty definitions, all from a published source: 41 from QFrCoRT, 19 from the Vitrine linguistique of the OQLF. No entry is drafted in-house.",
+    "EVALUATION": "Detection accuracy on the first turn as the primary metric, definition accuracy on the second, the count of answers naming no term at all, and the breakdown by number of terms present in the turn and by source of definition.",
+    "EXPECTED TRUTH": "poudrerie , souffleuse or fin de semaine",
+    "GIVEN TO THE MODEL": "Excerpt: « M. le Président, la poudrerie a fermé les routes de la région et les cols bleus ont sorti les souffleuses dès le petit matin, avant la fin de semaine qui vient. » Question: which word or expression of this excerpt is a Quebecism?",
+    "ITEM": "A whole turn of at least forty words carrying one or more Quebecisms, and nothing else: no term is named and no option is shown, since showing the definitions would reveal which words to look for. The ground truth is the list of all the terms present, so any correct answer counts. TWO TURNS The first turn asks which word or expression of the excerpt is a Quebecism. The second turn asks for the meaning of the term the model just named, with five options and an abstention option built for that term. Options built for a term chosen in advance would amount to correcting the answer before scoring it. EXAMPLE « M. le Président, la poudrerie a fermé les routes de la région et les cols bleus ont sorti les souffleuses dès le petit matin... » Turn 1: poudrerie, souffleuse or fin de semaine, all three accepted. Turn 2: the meaning of the one named. WHY THE TASK CHANGED SHAPE The former 1a named the term and asked for its meaning, which is what 1h and 1i now do on a vocabulary seventy-five times larger. It also leaked: a baseline picking the option sharing the most words with the excerpt scored 59 %. Splitting the task in two closes that leak by construction, since no single prompt holds both the excerpt and the options.",
+    "NOTE": "Turn 1, no options shown. All three are present, so all three count. Turn 2 then asks for the meaning of the one named, with five options built for that term; the excerpt is no longer shown, which is what closes the 59 % lexical- overlap leak of the former single-turn form.",
+    "etat": "IN DEVELOPMENT",
+    "titre": "Find the Quebecism in an exchange, then define it"
+  },
+  "1b": {
+    "CORPUS": "Encyclopédie du parlementarisme québécois of the National Assembly. Each entry names the page it comes from, so a contested definition reopens at its source. A definition of several sentences is reduced to the first, the one that defines; no word inside the retained sentence is changed.",
+    "EVALUATION": "Accuracy, abstention rate and macro-F1.",
+    "EXPECTED TRUTH": "A. Procédure de suspension des règles qui abrège le débat ← truth B. Motion demandant la scission d'un projet F. je ne sais pas",
+    "GIVEN TO THE MODEL": "Excerpt: « Le gouvernement a imposé le bâillon pour clore l'étude détaillée. » Question: what does bâillon mean?",
+    "ITEM": "The excerpt, the question, five options and an abstention option. The asked term is masked in the shown options, never in the table, since official definitions sometimes repeat it. EXAMPLE motion de scission, mandat d'initiative, outrage au Parlement. TERM SELECTION The 32 terms are chosen on measured frequency rather than on an idea of what procedure matters: each is counted in the first 200 000 turns of the Journal des débats, and the rarest appears 24 times.",
+    "NOTE": "The asked term is masked in any option that repeats it.",
+    "titre": "Give the meaning of a parliamentary procedure term"
+  },
+  "1c": {
+    "CORPUS": "Objective list versioned with the code, the same one 0j exercises.",
+    "EVALUATION": "Accuracy and abstention rate, with span containment and its verbosity counterpart, since a designation drowned in a sentence must not score like a designation given alone. A judge is served on the same items, and its agreement is published. WHY THE PAIR WITH 0J The two tasks read the same acronyms on the same excerpts, and only the answer format differs. A model that knows the body but cannot name it fails here and succeeds at 0j; the two scores are therefore published together, and their gap is the measure. Read either one alone and wording passes for ignorance.",
+    "EXPECTED TRUTH": "Commission des normes, de l'équité, de la santé et de la sécurité du travail",
+    "GIVEN TO THE MODEL": "« La CNESST a rendu sa décision au mois de mai. »",
+    "ITEM": "The acronym in its excerpt, and no options: the model writes the designation. The sentence travels with the acronym so the task stays a reading of the corpus rather than a pure memory probe.",
+    "NOTE": "No options: the model writes the designation. « je ne sais pas » is the contracted answer for an acronym it does not know, and abstaining is counted rather than scored as an error. Read against 0j, which offers the same acronym as a choice: the gap measures wording, not knowledge.",
+    "titre": "Give the official expansion of an acronym"
+  },
+  "1d": {
+    "CORPUS": "Journal des débats. Self-supervised: the truth is what the speaker said, so it regenerates with every sitting.",
+    "EVALUATION": "Accuracy, abstention rate and macro-F1. GUARD A test refuses, entry by entry, that a 1a ground truth equal the hexagonal equivalent expected here, which would make the two tasks a duplicate.",
+    "EXPECTED TRUTH": "A. fin de semaine ← truth B. week-end",
+    "GIVEN TO THE MODEL": "« Nous avons travaillé toute la [......] sur ce dossier. »",
+    "ITEM": "The turn with the word removed, and candidates including the hexagonal equivalent. EXAMPLE fin de semaine against week-end, dépanneur against épicerie de nuit.",
+    "NOTE": "Self-supervised: the truth is the word the speaker actually used, so it regenerates with every sitting.",
+    "titre": "Give the word a Quebec speaker actually used"
+  },
+  "1e": {
+    "CORPUS": "QFrCoLA, 25 153 sentences.",
+    "EVALUATION": "Macro-F1 as the primary metric, with accuracy alongside, broken down by category.",
+    "EXPECTED TRUTH": "non acceptable",
+    "GIVEN TO THE MODEL": "« Le comité s'a réuni hier pour étudier la question. »",
+    "ITEM": "One sentence, no context. The instruction names Quebec French and not « French », since a sentence judged wrong by the hexagonal norm can be acceptable here, and that is exactly what the task separates.",
+    "NOTE": "The instruction names Quebec French: a form rejected by the hexagonal norm can be acceptable here, which is exactly what the task separates.",
+    "titre": "Judge whether a sentence is acceptable Quebec French"
+  },
+  "1f": {
+    "CORPUS": "QFrBLiMP.",
+    "EVALUATION": "Accuracy as the primary metric, reported against the measured human ceiling and never against an absolute 1, with the breakdown by category and by phenomenon alongside.",
+    "EXPECTED TRUTH": "A",
+    "GIVEN TO THE MODEL": "A Les députés qui ont voté contre le projet sont sortis. B Les députés qu'ont voté contre le projet sont sortis.",
+    "ITEM": "Two sentences differing in one respect, shown in the order of the source.",
+    "NOTE": "Reported against the measured human ceiling, never against an absolute 1.",
+    "titre": "Prefer the grammatical sentence of a minimal pair"
+  },
+  "1g": {
+    "CORPUS": "Journal des débats for the human side, nine declared generators for the machine side. Two served conditions, tours and tours-nettoye , which keep and strip transcription markers on both sides so the gap between their scores measures only surface treatment. A third condition on sentences outside the sitting record is kept as a declared negative control.",
+    "EVALUATION": "Accuracy, chance level, majority-class rate, the surface-rule baseline which must stay near chance, the breakdown by generator, and the opening-address imbalance, which catches a leak that marker counting cannot see.",
+    "EXPECTED TRUTH": "A is human",
+    "GIVEN TO THE MODEL": "A M. le Président, quand on met en commun tous les services, il faut se poser la question... les 52 ententes que le maire de Sherbrooke est obligé de signer chaque année... B Monsieur le Président, je remercie mon collègue de l'opposition officielle de soulever cette question importante pour nos régions...",
+    "ITEM": "Two whole turns of 80 to 400 words, one real and one generated, in an order derived from the item identifier. The generator never sees the real turn: it receives the two preceding turns, the sitting date, the speaker's party and a target length, since a generator shown the real turn paraphrases it and the pair would then measure rewriting rather than provenance. EXAMPLE Human: « M. le Président, quand on met en commun tous les services, il faut, à un moment donné, se poser la question... les 52 ententes de services que le maire de Sherbrooke est obligé de signer... » against a generated turn built from the two preceding turns alone.",
+    "NOTE": "B was generated from the two preceding turns, the date, the party and a target length. The generator never saw turn A.",
+    "etat": "IN REWORK",
+    "titre": "Tell the human turn from the machine turn"
+  },
+  "1h": {
+    "CORPUS": "QFrCoRE, whose definitions come from the Dictionnaire des expressions québécoises of Pierre DesRuisseaux. Only the subdirectory files of the repository carry the answer key; the root-level ones do not.",
+    "EVALUATION": "Accuracy, abstention rate and macro-F1. Licence CC BY-NC 4.0, and the reservation travels with every item.",
+    "EXPECTED TRUTH": "A. Aller en trombe, à fond de train B. Hésiter entre deux réalités, tergiverser ← truth C. Être de mauvaise humeur, être en colère F. je ne sais pas",
+    "GIVEN TO THE MODEL": "Expression: Être à cheval entre deux réalités.",
+    "ITEM": "The expression alone, five options and an abstention option. The ten options of the source are not reused: distractors are rebuilt from the definitions of other entries, bracketed on length around the correct one. EXAMPLE « Être à cheval entre deux réalités. », correct answer: « Hésiter entre deux réalités, tergiverser. » WHY THE OPTIONS ARE REBUILT On the source options, answering « the shortest » scores 58,5 % against 10 % chance, because a dictionary definition is terse where a generated distractor is verbose. Bracketed distractors bring that baseline to 0,3 %, below the 16,7 % chance level of the rebuilt items.",
+    "NOTE": "No context is given. The source's own ten options are discarded : « pick the shortest » solved 58,5 % of them.",
+    "titre": "Give the meaning of a Quebec expression, out of context"
+  },
+  "1i": {
+    "CORPUS": "QFrCoRT, whose definitions come from the McGill linguistic capsules.",
+    "EVALUATION": "Accuracy, abstention rate and macro-F1. Licence CC BY-NC 4.0.",
+    "EXPECTED TRUTH": "A. Test de classement ou de placement B. Se produire de façon fortuite, une coïncidence ← truth C. Qui change souvent d'opinion F. je ne sais pas",
+    "GIVEN TO THE MODEL": "Term: Adonner",
+    "ITEM": "The term alone, five options and an abstention option, distractors rebuilt as in 1h. The prompt does not say « in this excerpt », since this task provides none. EXAMPLE Adonner, correct answer: « Pour parler de quelque chose qui se produit de façon fortuite, une coïncidence. » WHY THE OPTIONS ARE REBUILT Two leaks are measurable on the source options: « the shortest » scores 71,9 %, and nine of the ten distractors repeat the term, so « the only option that does not cite it » scores 22,2 %. Rebuilt options bring the length baseline to 3,5 %.",
+    "NOTE": "No context is given.",
+    "titre": "Give the meaning of a Quebec term, out of context"
+  },
+  "1j": {
+    "CORPUS": "Journal des débats for the human side, the same declared generator fleet as 1g for the machine side. Two served conditions, phrases on sitting sentences and qfr kept as a declared negative control. The conditions of the two tasks never mix: each reads only the ones it declares.",
+    "EVALUATION": "Accuracy, chance level, majority-class rate, the surface-rule baseline which must stay near chance, and the breakdown by generator, without which the score says nothing.",
+    "EXPECTED TRUTH": "A is human",
+    "GIVEN TO THE MODEL": "A Les crédits annoncés pour les régions sont inférieurs de moitié à ce qui avait été promis. B Le gouvernement tient à rappeler que les investissements consentis aux régions demeurent sans précédent.",
+    "ITEM": "Two single sentences, one real and one generated, in an order derived from the item identifier. Same task as 1g one level down in granularity: a sentence carries far fewer cues than a whole turn, so the two scores read together say how much of the provenance signal lives in the discourse structure rather than in the sentence. EXAMPLE Human: « Les crédits annoncés pour les régions sont inférieurs de moitié à ce qui avait été promis. » against a sentence generated from the surrounding context alone. WHY ONE GENERATOR WOULD NOT DO A single generator makes the task measurable but not generalisable: the score then says how well the model recognises that generator. The fleet spreads across four lineages, and each pair is assigned to a generator by highest hash weight, so adding a model later leaves 50,3 % of existing assignments untouched where a plain random draw would leave 12,6 %.",
+    "NOTE": "Same question as 1g, one sentence instead of a whole turn: far fewer cues, and the gap between the two scores says how much of the provenance signal lives in the structure of the discourse.",
+    "titre": "Tell the human sentence from the machine sentence"
+  },
+  "2a": {
+    "CORPUS": "Journal des débats crossed with the table of Quebec governments. A federal corpus is refused outright and the refusal is published, since the side is deduced from the Quebec table.",
+    "EVALUATION": "Macro-F1 as the primary metric, with accuracy alongside: on a balanced lot the two agree, and macro-F1 is what holds when the lot is not. The floor: gold balanced 250/250, so both the majority class and chance sit at 50,0 %.",
+    "EXPECTED TRUTH": "opposition",
+    "GIVEN TO THE MODEL": "« Ce gouvernement improvise depuis trois ans et les résultats sont là : les listes d'attente s'allongent. »",
+    "ITEM": "One turn with the speaker masked.",
+    "NOTE": "Speaker masked. Party crossed with the table of Quebec governments. Gold balanced 250/250, so chance is 50,0 %.",
+    "titre": "Say whether the speaker is government or opposition"
+  },
+  "2b": {
+    "CORPUS": "Journal des débats, with the party register filtered by the legislature sitting at the date of the turn. Platform summaries are generated once by a frontier model.",
+    "EVALUATION": "Macro-F1 as the primary metric, with accuracy alongside. The two can diverge sharply here: one model reads 22,8 in accuracy for 10,94 in macro-F1. Floors: 20,0 % majority class with gold balanced at 100 per party, and 27,60 % chance computed item by item because the number of options runs from 2 to 5.",
+    "EXPECTED TRUTH": "A. CAQ ← truth B. PLQ C. QS D. PQ",
+    "GIVEN TO THE MODEL": "« Il faut donner aux régions les moyens de décider elles-mêmes de leur développement. »",
+    "ITEM": "One turn with the speaker masked, and the parties sitting at that date as options. The legislature must travel with the turn: without it no option is produced, every turn is discarded, and the campaign publishes « no items », which reads as a thin corpus rather than a missing column.",
+    "NOTE": "Speaker masked. Sitting of 2019, so the options are the parties sitting in the 42nd legislature. Chance is 27,60 %, computed item by item since the option count runs from 2 to 5.",
+    "titre": "Say which party deposited the intervention"
+  },
+  "2c": {
+    "CORPUS": "Electoral platforms, and not the sitting record: five federal parties of Canada 2019 from POLTEXT, and the Quebec platforms archived by the Société du patrimoine politique du Québec, 1956 to 2022. The unified catalogue holds 69 platforms over thirteen parties, and a language model writes a themed summary of each. Four produced none, their source being unusable, a footer alone, mojibake or degraded OCR; 1 507 validated summaries came out of the rest.",
+    "EVALUATION": "Accuracy and macro-F1 with the confusion matrix, reported per election and per domain. Macro-F1 is what reads: one party may carry thirty elections, so overall accuracy on the archive does not mean what it means over nine balanced classes. An unreadable answer counts as an error, never as a withdrawn item. THE MEASURE IS A GAP Each platform is summarised in two variants, with and without the anchors that identify it, and the gap between the two is what the task measures: the share of the score that comes from ideological content rather than from a recognisable proper noun. STATE Served by its own pipeline and not by the campaign engine: the corpus is a one-shot artefact, and regenerating it invalidates every figure published before, since the forbidden- mention list enters the generation prompt and its fingerprint with it. Two series compare only at equal prompt fingerprint.",
+    "EXPECTED TRUTH": "A. Parti québécois ← truth B. CAQ C. PLQ D. QS",
+    "GIVEN TO THE MODEL": "« [parti] propose un bouclier tarifaire sur l'électricité, le gel des tarifs de garde et un crédit d'impôt pour les aînés à domicile. »",
+    "ITEM": "One themed summary and the parties of its jurisdiction as options, five federal or eight provincial. The party name, its acronym and its leader are forbidden at generation time and each summary is checked: a summary that leaks is refused, never patched, since masking « économie verte » or « agriculture solidaire » by regular expression would destroy platform content rather than a label.",
+    "NOTE": "A themed summary of an electoral platform. The party name, its acronym and its leader are forbidden at generation time, not masked afterwards. The options are the parties of the jurisdiction: five federal ones on Canadian questions, eight provincial ones on Quebec questions. The truth is the party that deposited the platform.",
+    "titre": "Name the party behind an anonymised platform summary"
+  },
+  "2d": {
+    "CORPUS": "Twelve-dimension taxonomy of Quebec values, with seven catalogued empirical sources including the Assembly's recorded votes since the 42nd legislature and DGEQ results.",
+    "EVALUATION": "Krippendorff alpha for inter-annotator agreement first, then the judge reported against that ceiling. STATE Out of software scope. Requires the panel of Quebec annotators and a calibration set of 100 to 150 exchanges, doubly or triply annotated, stratified by level and dimension.",
+    "EXPECTED TRUTH": "Laïcité à la québécoise",
+    "GIVEN TO THE MODEL": "« La laïcité de l'État n'est pas négociable, et le visage découvert est une exigence minimale. »",
+    "NOTE": "One of twelve dimensions. Requires the annotator panel, so no item is currently built.",
+    "etat": "IN DEVELOPMENT",
+    "titre": "Say which value dimension is invoked"
+  },
+  "3a": {
+    "CORPUS": "Journal des débats, question period. The exchange must postdate the training cutoff of the answering model, so the real reply cannot have been memorised.",
+    "EVALUATION": "Cultural acceptability band by percentiles, argumentative faithfulness, where the arguments for and against the contested proposition survive with no invented facts, and partisan alignment. STATE In development. Waits on the annotator panel: the band cannot be computed without it, and a judge cannot be calibrated against a ceiling that has not been measured.",
+    "EXPECTED TRUTH": "The reply actually given , plus the acceptability band: the central 50 % of replies that Quebec annotators judged plausible.",
+    "GIVEN TO THE MODEL": "Question (opposition): « M. le Président, le ministre peut-il déposer les études qui justifient ce tracé ? » Roles: opposition asks, Transport minister answers. Sitting after the model's training cutoff.",
+    "GROUND TRUTH": "The reply actually given, plus an acceptability band: the central fifty per cent of replies that Quebec annotators judged plausible. A single right answer would be wrong here, since several replies can be equally plausible.",
+    "ITEM": "The opposition's question, the topic, the roles and the sitting context. The real reply is withheld.",
+    "NOTE": "A single right answer would be wrong here: several replies can be equally plausible.",
+    "etat": "IN DEVELOPMENT",
+    "titre": "Produce the minister's reply to a real opposition question"
+  },
+  "3b": {
+    "CORPUS": "The same exchanges as 3a, read in the other direction.",
+    "EXPECTED TRUTH": "The question actually asked , plus its acceptability band.",
+    "GIVEN TO THE MODEL": "Reply (minister): « Les études seront rendues publiques au moment du dépôt du projet, comme nous l'avons toujours fait. » Roles: which question does this answer?",
+    "GROUND TRUTH": "The question actually asked, plus its acceptability band. WHY BOTH DIRECTIONS A model can be good at defending and poor at attacking. Running the exchange both ways separates producing an institutional answer from producing a partisan challenge, which 3a alone would merge. STATE In development. Shares its annotation with 3a, so its marginal cost is small once 3a is annotated.",
+    "ITEM": "The minister's reply, the topic and the roles. The question is withheld.",
+    "NOTE": "Run in both directions because defending and attacking are not the same competence.",
+    "etat": "IN DEVELOPMENT",
+    "titre": "Produce the opposition question that a known reply"
+  },
+  "4a": {
+    "CORPUS": "An issue drawn from the sitting record, a role (party, government or opposition), and a sitting context.",
+    "EXPECTED TRUTH": "No reference text. A calibrated judge scores four axes from 1 to 7: linguistic quality, semantic coherence, political authenticity, and Quebec cultural relevance , whose four bands run from cultural misreading to culturally typical.",
+    "GIVEN TO THE MODEL": "Issue: financing of public transit in the regions. Role: opposition member, PQ. Context: question period, spring 2026.",
+    "GROUND TRUTH": "None in the usual sense. A calibrated judge scores four axes, each on a one to seven scale with an explicit rubric per level: linguistic quality, semantic coherence, political authenticity, and Quebec cultural relevance. THE CULTURAL RUBRIC Four qualitative bands, lowest to highest: cultural misreading, where a reference sits out of context or a foreign value is grafted on; culturally neutral, correct but generic enough to come from any francophone parliament; culturally appropriate, mobilising relevant Quebec references; and culturally typical, whose register, references and positioning are characteristic of Quebec discourse. STATE In development. Waits on the panel and on the six-step judge calibration: a Quebec reference set, a perturbation battery reporting a robustness rate per bias, a measurement of the judge's own orientation, and a decision on single judge versus panel taken by measuring error correlation rather than assuming a panel helps.",
+    "ITEM": "The issue and the role. No target text: the task is open generation, which is what makes it the most demanding level.",
+    "etat": "IN DEVELOPMENT",
+    "titre": "Generate an intervention on a Quebec issue in a given"
+  },
+  "4b": {
+    "CORPUS": "The same issues as 4a, with a second role assigned. Canadian federal Hansard, French and English aligned: the same interventions in two languages. The European Parliament extends the bench to some twenty languages. Journal des débats for pure Quebec French, translator held constant.",
+    "EVALUATION": "The same four-axis judge, plus partisan alignment on both the left-right and sovereignist- federalist axes. WHY IT IS SEPARATE FROM 4A Producing a position and producing its rebuttal are not the same competence. A model that has learned one party's talking points can pass 4a and fail here, and the gap says whether it understands the Quebec political space or only one side of it. STATE In development. Reuses the judge and panel of 4a. x1      Compare fluency on strictly aligned content, both                            IN DEVELOPMENT         ↑ table languages Perplexity normalised in bits per character, never per token: token granularity varies by language, and French, all the more an under-represented variety, fragments more. Lower fluency in Quebec French signals a dominant English anchoring. TWO CAUTIONS High fluency can also mean a model normalising Quebec French toward hexagonal French, which is precisely the deficit sought. And the signal overlaps the documented self- preference bias, since judges over-score low-perplexity text: a model that struggles with Quebec French is also liable to under-score it. The probe is triangulated against QFrBLiMP- style minimal pairs and a human check on a sample. STATE In development, and waits on nothing external. confidence_bits_per_char is already computed on every task and model; gold_bits_per_char is null in 476 of 477 manifests, with a published reason naming an obstacle that does not apply to a vLLM campaign. Requires open weights, which the whole fleet has. x2     Measure what a round trip through English erases                                   ↑ table MeaningBERT for semantic drift and the survival rate of Quebec terms for lexical specificity. Strong drift, especially on the lexical half, shows that passing through English erases what is Quebec about the text. THE CONFUSION TO ISOLATE The drift mixes the tested model's own weakness with the translation system's, since the translator may normalise Quebec French on its own. Hence a constant translator, a hand- checked sample, and a documented similarity model, itself possibly biased toward standard French. B. Release history This document is rebuilt by one command from rapport/donnees/ , so it follows the code rather than a hand. The release number, however, is raised by hand: two printings of the same state of the repository are the same release, and a printing that follows a protocol decision is another one. Printings before 1.3 carried no number and are named by their commit. Release           Date          What changed 1.3               2026-08-31    Model counts are computed rather than written: the opening paragraph said thirty models and twenty-six evaluated over a table of forty-two, and two family headers undercounted their own rows. 0j and 1c exchange answer formats, recognition at level 0 and production at level 1, and each names the other. 2c becomes the electoral platform task, which had carried that name in the tickets without ever appearing here, and the value dimension becomes 2d. 1g is marked in rework, having left the contract on 17 August. 1j loses its in-development mark: it is in the deployed lists. unnumbered        2026-08-20    Commit 5f9cfa6: fleet recompiled at forty-two evaluated models. unnumbered        2026-08-19    Commit 042a9a1: repository split in three layers, 1a reworked in two turns, 1j opened.",
+    "EXPECTED TRUTH": "The same four-axis judge, plus partisan alignment on the left-right and sovereignist-federalist axes. Bits per character: FR 1,42    EN 1,18 « Nous allons nous lancer là-dedans dès le week-end . » Meaning held, Quebec specificity erased: preservation 0/2",
+    "GIVEN TO THE MODEL": "The intervention produced by 4a, plus the role expected to answer it: government, CAQ. « Le comité a recommandé le rejet de l'amendement. » « The committee recommended that the amendment be rejected. » « On va se garrocher là-dedans dès la fin de semaine. » → English → French",
+    "ITEM": "The issue, the intervention already produced, and the role expected to answer it. The same content on both sides, controlled for length and domain. The same model is measured on both, never two models. A passage carrying Quebec references, translated to English then back to French in two calls. This is the served form of 0l, read here against x1.",
+    "NOTE": "A model that learned one party's talking points can pass 4a and fail here. Strictly aligned content, same model on both sides. Never per token: granularity varies by language, and French fragments more. A gap signals English anchoring, unless the model is normalising Quebec French, which is the deficit sought.",
+    "etat": "IN DEVELOPMENT",
+    "titre": "Generate the counter-argument a rival party would"
+  }
+}

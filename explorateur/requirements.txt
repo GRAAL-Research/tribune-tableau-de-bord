@@ -1,0 +1,10 @@
+# Dependances du tableau de bord, et rien d'autre.
+#
+# **Un fichier a part, dans le dossier de l'application.** La racine porte `requirements.txt`
+# pour la conversion des corpus ; y ajouter Streamlit ferait installer un serveur web a
+# quiconque veut seulement batir un corpus, et y ajouter `pyarrow` epingle ferait echouer le
+# deploiement sur une version que l'hebergeur n'a pas. Streamlit Community Cloud lit le fichier
+# le plus proche du script deploye : c'est celui-ci.
+streamlit
+pandas
+matplotlib

@@ -1,0 +1,11 @@
+# Thème du tableau de bord.
+#
+# Le rouge par défaut de Streamlit colore les barres de progression et les éléments actifs.
+# Sur un tableau de résultats, le rouge se lit comme un avertissement : une barre rouge à 92 %
+# dit le contraire de ce que le chiffre dit. Le bleu est neutre, et laisse le jaune et le rouge
+# aux vraies mises en garde de couverture.
+[theme]
+primaryColor = "#1f6feb"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#f4f6fa"
+textColor = "#1c2333"

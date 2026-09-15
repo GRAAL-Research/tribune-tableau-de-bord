@@ -27,6 +27,7 @@ import hmac
 import secrets
 
 import streamlit as st
+from streamlit.errors import StreamlitSecretNotFoundError
 
 from explorateur import textes
 
@@ -56,13 +57,43 @@ def _correspond(mot_de_passe: str, attendu: str) -> bool:
     return hmac.compare_digest(binascii.hexlify(calcule).decode(), empreinte_hex)
 
 
+def _ressemble_a_une_empreinte(valeur: object) -> bool:
+    """Vrai si cette valeur a la forme `sel$empreinte`, en hexadecimal.
+
+    Sert a reconnaitre un compte pose a la racine des secrets, sans l'en-tete de section.
+    """
+    texte = str(valeur)
+    sel, separateur, derive = texte.partition("$")
+    return bool(separateur) and all(
+        part and len(part) % 2 == 0 and set(part) <= set("0123456789abcdef")
+        for part in (sel, derive)
+    )
+
+
 def _comptes() -> dict[str, str]:
-    """Les comptes declares, ou un dictionnaire vide si la configuration manque."""
+    """Les comptes declares, sous l'en-tete `[comptes]` ou a la racine des secrets.
+
+    **La racine est acceptee parce que l'en-tete s'oublie.** Mesure du 15 septembre 2026,
+    premiere configuration de l'hebergeur : les deux lignes avaient ete collees sans le
+    `[comptes]` qui les precede, et l'application refusait l'acces a tout le monde en disant
+    « aucun compte n'est configure » -- ce qui etait vrai de son point de vue et incomprehensible
+    du cote de qui venait de les coller. Une entree de racine dont la valeur a la forme d'une
+    empreinte est un compte ; une variable d'environnement ordinaire ne l'a pas.
+    """
+    comptes: dict[str, str] = {}
     try:
-        bruts = st.secrets["comptes"]
-    except (KeyError, FileNotFoundError):
+        secrets = dict(st.secrets)
+    except (FileNotFoundError, StreamlitSecretNotFoundError):
         return {}
-    return {str(nom): str(valeur) for nom, valeur in dict(bruts).items()}
+    sous_entete = secrets.get("comptes")
+    if sous_entete is not None:
+        comptes.update({str(nom): str(valeur) for nom, valeur in dict(sous_entete).items()})
+    comptes.update({
+        str(nom): str(valeur)
+        for nom, valeur in secrets.items()
+        if nom != "comptes" and _ressemble_a_une_empreinte(valeur)
+    })
+    return comptes
 
 
 def _refuser_faute_de_configuration() -> None:
@@ -73,9 +104,11 @@ def _refuser_faute_de_configuration() -> None:
     """
     st.error("Aucun compte n'est configure : l'acces est refuse.")
     st.markdown(
-        "Creer `.streamlit/secrets.toml` a partir de `secrets.toml.exemple`, ou renseigner "
-        "les secrets chez l'hebergeur. Les empreintes se fabriquent avec :\n\n"
-        "```bash\npython -m explorateur.empreinte\n```"
+        "Les comptes vont dans les secrets, **precedes de leur en-tete de section** :\n\n"
+        '```toml\n[comptes]\nmarie = "a1b2...$c3d4..."\n```\n\n'
+        "En local, dans `.streamlit/secrets.toml` ; en ligne, dans la configuration de "
+        "l'hebergeur. Les empreintes se fabriquent avec :\n\n"
+        "```bash\npython -m explorateur.empreinte --identifiant marie\n```"
     )
 
 
